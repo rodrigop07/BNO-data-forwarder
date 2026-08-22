@@ -186,6 +186,9 @@ esp_err_t configure_oled_screen(i2c_master_bus_handle_t *i2c_bus) {
       } else {
         lv_disp_set_rotation(local_disp, LV_DISPLAY_ROTATION_0);
       }
+    } else if (err == ESP_ERR_NVS_NOT_FOUND) {
+      ESP_LOGI(TAG, "No saved rotation config found in NVS, using default.");
+      lv_disp_set_rotation(local_disp, LV_DISPLAY_ROTATION_0);
     } else {
       ESP_LOGE(TAG, "Error in opening NVS: %s", esp_err_to_name(err));
       lv_disp_set_rotation(local_disp, LV_DISPLAY_ROTATION_0);

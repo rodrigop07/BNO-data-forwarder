@@ -10,11 +10,20 @@
 #include "imu_config.h"
 #include "oled_printf.h"
 #include "oled_setup.h"
+#include "nvs_flash.h"
 
 static const char TAG[] = "main";
 extern lv_disp_t *local_disp;
 
 void app_main(void) {
+    // Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
     enable_vext_rail(); // rail de energia da placa, uma vez, antes de qualquer I2C
 
     i2c_master_bus_handle_t i2c_bus = NULL;
@@ -32,17 +41,13 @@ void app_main(void) {
     float angx, angy, angz;
     float accx, accy, accz;
 
-#ifndef CONFIG_APP_SAMPLE_DELAY_MS
-#define CONFIG_APP_SAMPLE_DELAY_MS 50
-#endif
-
-    while (1) {
-        if (imu_get_data(&angx, &angy, &angz, &accx, &accy, &accz)) {
+    while(1){
+        if(imu_get_data(&angx, &angy, &angz, &accx, &accy, &accz)){
             printf("%.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", angx, angy, angz, accx, accy, accz);
 #ifdef CONFIG_APP_ENABLE_OLED_OUTPUT
             printf_oled("Ang: %.1f %.1f %.1f\nAcc: %.2f %.2f %.2f", angx, angy, angz, accx, accy, accz);
 #endif
-        } else {
+        }else{
 #ifdef CONFIG_APP_ENABLE_OLED_OUTPUT
             printf_oled("IMU Lendo...");
 #endif
