@@ -1,0 +1,144 @@
+menu "Project Configuration"
+
+    menu "OLED Display Configuration"
+
+        choice EXAMPLE_LCD_CONTROLLER
+            prompt "LCD controller model"
+            default EXAMPLE_LCD_CONTROLLER_SSD1306
+            help
+                Select LCD controller model for the OLED display.
+
+            config EXAMPLE_LCD_CONTROLLER_SSD1306
+                bool "SSD1306"
+
+            config EXAMPLE_LCD_CONTROLLER_SH1107
+                bool "SH1107"
+        endchoice
+
+        if EXAMPLE_LCD_CONTROLLER_SSD1306
+            choice EXAMPLE_SSD1306_HEIGHT
+                prompt "SSD1306 Height in pixels"
+                default EXAMPLE_SSD1306_HEIGHT_64
+                help
+                    Height of the display in pixels (vertical resolution).
+
+                config EXAMPLE_SSD1306_HEIGHT_64
+                    bool "64"
+                config EXAMPLE_SSD1306_HEIGHT_32
+                    bool "32"
+            endchoice
+
+            config EXAMPLE_SSD1306_HEIGHT
+                int
+                default 64 if EXAMPLE_SSD1306_HEIGHT_64
+                default 32 if EXAMPLE_SSD1306_HEIGHT_32
+        endif
+
+        config OLED_SDA_GPIO
+            int "OLED SDA GPIO"
+            default 17
+            help
+                SDA pin for the onboard display (GPIO 17 on Heltec WiFi LoRa 32 V3).
+
+        config OLED_SCL_GPIO
+            int "OLED SCL GPIO"
+            default 18
+            help
+                SCL pin for the onboard display (GPIO 18 on Heltec WiFi LoRa 32 V3).
+
+        config OLED_RST_GPIO
+            int "OLED Reset (RST) GPIO"
+            default 21
+            help
+                Reset pin for the onboard display (GPIO 21 on Heltec WiFi LoRa 32 V3).
+
+        config OLED_VEXT_CTRL_GPIO
+            int "Vext Power Rail Control GPIO"
+            default 36
+            help
+                GPIO used to power the OLED rail and external sensors (GPIO 36, active-low).
+
+        config OLED_I2C_ADDR
+            hex "OLED I2C Address"
+            default 0x3C
+            help
+                I2C hardware address of the display (usually 0x3C).
+
+        config OLED_H_RES
+            int "OLED Horizontal Resolution (pixels)"
+            default 128
+
+        config OLED_V_RES
+            int "OLED Vertical Resolution (pixels)"
+            default 64 if !EXAMPLE_LCD_CONTROLLER_SSD1306
+            default EXAMPLE_SSD1306_HEIGHT if EXAMPLE_LCD_CONTROLLER_SSD1306
+
+    endmenu
+
+    menu "BNO085 Sensor Configuration"
+
+        config BNO085_I2C_ADDR
+            hex "BNO085 I2C Address"
+            default 0x4A
+            help
+                0x4A when AD0/ADR pin is GND (default for most breakout modules).
+                0x4B when AD0/ADR pin is connected to 3V3.
+
+        config BNO085_I2C_PORT
+            int "BNO085 I2C Port (0 or 1)"
+            default 1
+            range 0 1
+            help
+                I2C port for BNO085. On Heltec WiFi LoRa 32 V3, Port 0 is reserved
+                for the internal OLED, so Port 1 should be used for BNO085.
+
+        config BNO085_SDA_GPIO
+            int "BNO085 SDA GPIO"
+            default 6
+            help
+                GPIO pin connected to BNO085 SDA (GPIO 6 on Heltec V3 header).
+
+        config BNO085_SCL_GPIO
+            int "BNO085 SCL GPIO"
+            default 7
+            help
+                GPIO pin connected to BNO085 SCL (GPIO 7 on Heltec V3 header).
+
+        config BNO085_RESET_GPIO
+            int "BNO085 Reset (RST/NRST) GPIO"
+            default 4
+            help
+                Active-low hardware reset pin (GPIO 4 on Heltec V3 header).
+
+        config BNO085_INT_GPIO
+            int "BNO085 Interrupt (INT/H_INTN) GPIO"
+            default 5
+            help
+                Active-low data ready interrupt pin (GPIO 5 on Heltec V3 header).
+
+        config BNO085_REPORT_INTERVAL_US
+            int "Sensor Report Interval (microseconds)"
+            default 50000
+            help
+                Interval between sensor reports in microseconds.
+                10000 = 100 Hz, 20000 = 50 Hz, 50000 = 20 Hz, 100000 = 10 Hz.
+
+    endmenu
+
+    menu "Edge Impulse / Application Configuration"
+
+        config APP_SAMPLE_DELAY_MS
+            int "Main Loop Sample Interval (milliseconds)"
+            default 50
+            help
+                Delay in milliseconds between sensor readings printed to terminal (e.g. 50ms = 20Hz).
+
+        config APP_ENABLE_OLED_OUTPUT
+            bool "Enable OLED Live Display"
+            default y
+            help
+                Display live angles and accelerations on the OLED screen.
+
+    endmenu
+
+endmenu

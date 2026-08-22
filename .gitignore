@@ -1,0 +1,44 @@
+# ESP-IDF Build and generated files
+build/
+**/build/
+sdkconfig.old
+sdkconfig.ci
+flasher_args.json
+
+# ESP-IDF Component Manager
+managed_components/
+dependencies.lock
+
+# Editor & IDE configs
+.vscode/
+.idea/
+.clangd/
+.ccls-cache/
+compile_commands.json
+*.user
+*.workspace
+*.suo
+
+# Python virtualenv & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# OS specific files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary and backup files
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
