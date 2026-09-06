@@ -1,53 +1,40 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C5 | ESP32-C6 | ESP32-C61 | ESP32-H2 | ESP32-H21 | ESP32-H4 | ESP32-P4 | ESP32-S2 | ESP32-S3 | Linux |
-| ----------------- | ----- | -------- | -------- | -------- | -------- | --------- | -------- | --------- | -------- | -------- | -------- | -------- | ----- |
+# Projeto BNO085 para ML com Edge Impulse
 
-# Hello World Example
+Este repositório contém o código-fonte de um projeto para o **ESP32-S3** projetado para ler dados de um sensor de IMU **BNO085** e exibi-los tanto em um display OLED quanto na saída serial. 
 
-Starts a FreeRTOS task to print "Hello World".
+O principal objetivo deste projeto é **deixar o dispositivo configurado para enviar os dados de aceleração e giroscópio para a plataforma Edge Impulse**, utilizando a ferramenta [Edge Impulse Data Forwarder](https://docs.edgeimpulse.com/docs/tools/edge-impulse-cli/data-forwarder). Isso permite a aquisição de dados em tempo real para o treinamento de modelos de Machine Learning (ML).
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+## Características
 
-## How to use example
+- Leitura contínua dos dados inerciais utilizando o sensor BNO085.
+- Alternância entre leitura de **Aceleração Linear** (sem gravidade) e **Aceleração Global** (com gravidade).
+- O botão para alternar os modos está conectado ao **GPIO35** (configurado com *pull-up* interno, ativado em borda de descida/GND).
+- Os dados são exibidos no display OLED I2C para visualização rápida da configuração e dados em tempo real.
+- Saída formatada via Serial, pronta para ser capturada pelo Edge Impulse CLI.
 
-Follow detailed instructions provided specifically for this example.
+## Como usar com o Edge Impulse
 
-Select the instructions depending on Espressif chip installed on your development board:
+Como o ESP32 envia os dados continuamente pela porta serial em formato CSV (separado por vírgulas), você pode usar o `edge-impulse-data-forwarder` para enviar os dados para o seu projeto no Edge Impulse.
 
-- [ESP32 Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/stable/get-started/index.html)
-- [ESP32-S2 Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/get-started/index.html)
+1. Instale o [Edge Impulse CLI](https://docs.edgeimpulse.com/docs/tools/edge-impulse-cli/cli-installation).
+2. Conecte o ESP32-S3 via cabo USB.
+3. Abra um terminal e execute o comando:
+   ```bash
+   edge-impulse-data-forwarder
+   ```
+4. Siga as instruções na tela, faça login e associe os eixos do sensor no seu projeto do Edge Impulse.
+5. Inicie a aquisição de dados (Record new data) diretamente na plataforma do Edge Impulse.
 
+## Conexões e Diagrama Elétrico
 
-## Example folder contents
+Abaixo estão detalhados os pinos utilizados no ESP32-S3 e como conectá-los aos módulos BNO085 e OLED.
 
-The project **hello_world** contains one source file in C language [hello_world_main.c](main/hello_world_main.c). The file is located in folder [main](main).
+### Pinos configurados
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt` files that provide set of directives and instructions describing the project's source files and targets (executable, library, or both).
+- **GPIO35:** Botão para alternar entre aceleração global (com gravidade) e aceleração linear (sem gravidade). O botão deve ligar este pino ao **GND** quando pressionado.
+- (Verifique no arquivo `sdkconfig` ou configurações de `menuconfig` os pinos de I2C exatos para SDA e SCL, que foram configurados para o sensor BNO e para o Display OLED).
 
-Below is short explanation of remaining files in the project folder.
+### Diagrama Elétrico
 
-```
-├── CMakeLists.txt
-├── pytest_hello_world.py      Python script used for automated testing
-├── main
-│   ├── CMakeLists.txt
-│   └── hello_world_main.c
-└── README.md                  This is the file you are currently reading
-```
+![Diagrama Elétrico](assets/diagrama.png)
 
-For more information on structure and contents of ESP-IDF projects, please refer to Section [Build System](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html) of the ESP-IDF Programming Guide.
-
-## Troubleshooting
-
-* Program upload failure
-
-    * Hardware connection is not correct: run `idf.py -p PORT monitor`, and reboot your board to see if there are any output logs.
-    * The baud rate for downloading is too high: lower your baud rate in the `menuconfig` menu, and try again.
-
-## Technical support and feedback
-
-Please use the following feedback channels:
-
-* For technical queries, go to the [esp32.com](https://esp32.com/) forum
-* For a feature request or bug report, create a [GitHub issue](https://github.com/espressif/esp-idf/issues)
-
-We will get back to you as soon as possible.
