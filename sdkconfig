@@ -632,7 +632,7 @@ CONFIG_BNO085_REPORT_INTERVAL_US=50000
 # Edge Impulse / Application Configuration
 #
 CONFIG_APP_SAMPLE_DELAY_MS=10
-CONFIG_APP_ENABLE_OLED_OUTPUT=y
+# CONFIG_APP_ENABLE_OLED_OUTPUT is not set
 # end of Edge Impulse / Application Configuration
 # end of Project Configuration
 

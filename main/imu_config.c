@@ -64,6 +64,11 @@ static float g_acc_y = 0.0f;
 static float g_acc_z = 0.0f;
 static bool g_has_acc_reading = false;
 
+static float g_global_acc_x = 0.0f;
+static float g_global_acc_y = 0.0f;
+static float g_global_acc_z = 0.0f;
+static bool g_has_global_acc_reading = false;
+
 static void bno085_event_callback(bno085_handle_t handle, const bno085_sensor_value_t *value, void *user_context) {
     if (value == NULL) {
         return;
@@ -88,12 +93,20 @@ static void bno085_event_callback(bno085_handle_t handle, const bno085_sensor_va
             g_has_angle_reading = true;
             xSemaphoreGive(imu_mutex);
         }
+    } else if (value->sensor_id == BNO085_SENSOR_LINEAR_ACCELERATION) {
+        if (imu_mutex != NULL && xSemaphoreTake(imu_mutex, 0) == pdTRUE) {
+            g_acc_x = value->data.linear_acceleration.x;
+            g_acc_y = value->data.linear_acceleration.y;
+            g_acc_z = value->data.linear_acceleration.z;
+            g_has_acc_reading = true;
+            xSemaphoreGive(imu_mutex);
+        }
     } else if (value->sensor_id == BNO085_SENSOR_ACCELEROMETER) {
         if (imu_mutex != NULL && xSemaphoreTake(imu_mutex, 0) == pdTRUE) {
-            g_acc_x = value->data.accelerometer.x;
-            g_acc_y = value->data.accelerometer.y;
-            g_acc_z = value->data.accelerometer.z;
-            g_has_acc_reading = true;
+            g_global_acc_x = value->data.accelerometer.x;
+            g_global_acc_y = value->data.accelerometer.y;
+            g_global_acc_z = value->data.accelerometer.z;
+            g_has_global_acc_reading = true;
             xSemaphoreGive(imu_mutex);
         }
     }
@@ -170,14 +183,21 @@ void imu_config_init(void *unused) {
         return;
     }
 
-    // Enable accelerometer report
-    err = bno085_enable_sensor(s_bno085_handle, BNO085_SENSOR_ACCELEROMETER, CONFIG_BNO085_REPORT_INTERVAL_US);
+    // Enable linear acceleration report
+    err = bno085_enable_sensor(s_bno085_handle, BNO085_SENSOR_LINEAR_ACCELERATION, CONFIG_BNO085_REPORT_INTERVAL_US);
     if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to enable accelerometer: %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "Failed to enable linear acceleration: %s", esp_err_to_name(err));
         return;
     }
 
-    ESP_LOGI(TAG, "BNO085 successfully initialized (rotation vector and accelerometer enabled)");
+    // Enable global acceleration report
+    err = bno085_enable_sensor(s_bno085_handle, BNO085_SENSOR_ACCELEROMETER, CONFIG_BNO085_REPORT_INTERVAL_US);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to enable global acceleration: %s", esp_err_to_name(err));
+        return;
+    }
+
+    ESP_LOGI(TAG, "BNO085 successfully initialized (rotation vector and linear acceleration enabled)");
 
     xTaskCreate(imu_task_code, "imu_task_code", 4 * 1024, (void *)s_bno085_handle, 5,
                 &imu_task_handle);
@@ -198,7 +218,7 @@ bool imu_get_angles(float *x, float *y, float *z) {
     return false;
 }
 
-bool imu_get_accel(float *x, float *y, float *z) {
+bool imu_get_linear_accel(float *x, float *y, float *z) {
     if (imu_mutex != NULL && xSemaphoreTake(imu_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
         if (!g_has_acc_reading) {
             xSemaphoreGive(imu_mutex);
@@ -213,8 +233,22 @@ bool imu_get_accel(float *x, float *y, float *z) {
     return false;
 }
 
-bool imu_get_data(float *ang_x, float *ang_y, float *ang_z,
-                  float *acc_x, float *acc_y, float *acc_z) {
+bool imu_get_global_accel(float *x, float *y, float *z) {
+    if (imu_mutex != NULL && xSemaphoreTake(imu_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        if (!g_has_global_acc_reading) {
+            xSemaphoreGive(imu_mutex);
+            return false;
+        }
+        if (x) *x = g_global_acc_x;
+        if (y) *y = g_global_acc_y;
+        if (z) *z = g_global_acc_z;
+        xSemaphoreGive(imu_mutex);
+        return true;
+    }
+    return false;
+}
+
+bool imu_get_data(float *ang_x, float *ang_y, float *ang_z, float *acc_x, float *acc_y, float *acc_z) {
     if (imu_mutex != NULL && xSemaphoreTake(imu_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
         if (!g_has_angle_reading && !g_has_acc_reading) {
             xSemaphoreGive(imu_mutex);

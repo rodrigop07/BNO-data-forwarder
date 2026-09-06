@@ -2,6 +2,7 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/gpio.h"
 #include "sdkconfig.h"
 #include <inttypes.h>
 #include <stdio.h>
@@ -41,11 +42,32 @@ void app_main(void) {
     float angx, angy, angz;
     float accx, accy, accz;
 
+    gpio_config_t io_conf = {
+        .intr_type = GPIO_INTR_DISABLE,
+        .mode = GPIO_MODE_INPUT,
+        .pin_bit_mask = (1ULL << GPIO_NUM_35),
+        .pull_down_en = 0,
+        .pull_up_en = 1
+    };
+    gpio_config(&io_conf);
+    
+    bool use_global_accel = false;
+    int last_button_state = 1;
+
     while(1){
+        int button_state = gpio_get_level(GPIO_NUM_35);
+        if(button_state == 0 && last_button_state == 1) {
+            use_global_accel = !use_global_accel;
+        }
+        last_button_state = button_state;
+
         if(imu_get_data(&angx, &angy, &angz, &accx, &accy, &accz)){
-            printf("%.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", angx, angy, angz, accx, accy, accz);
+            if (use_global_accel) {
+                imu_get_global_accel(&accx, &accy, &accz);
+            }
+            printf("%s: %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", use_global_accel ? "Global" : "Linear", angx, angy, angz, accx, accy, accz);
 #ifdef CONFIG_APP_ENABLE_OLED_OUTPUT
-            printf_oled("Ang: %.1f %.1f %.1f\nAcc: %.2f %.2f %.2f", angx, angy, angz, accx, accy, accz);
+            printf_oled("Ang: %.1f %.1f %.1f\n%s: %.2f %.2f %.2f", angx, angy, angz, use_global_accel ? "GLB" : "LIN", accx, accy, accz);
 #endif
         }else{
 #ifdef CONFIG_APP_ENABLE_OLED_OUTPUT

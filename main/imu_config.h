@@ -12,10 +12,11 @@ void imu_config_init(void *unused);
 
 bool imu_get_angles(float *x, float *y, float *z);
 
-bool imu_get_accel(float *x, float *y, float *z);
+bool imu_get_linear_accel(float *x, float *y, float *z);
 
-bool imu_get_data(float *ang_x, float *ang_y, float *ang_z,
-                  float *acc_x, float *acc_y, float *acc_z);
+bool imu_get_global_accel(float *x, float *y, float *z);
+
+bool imu_get_data(float *ang_x, float *ang_y, float *ang_z, float *acc_x, float *acc_y, float *acc_z);
 
 #ifdef __cplusplus
 }
